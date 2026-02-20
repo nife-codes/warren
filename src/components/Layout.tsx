@@ -1,11 +1,13 @@
-import { Link, useLocation } from "react-router-dom";
-import { Rabbit, Plus, Home, User, Search, Lock } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Rabbit, Plus, Home, User, Search, Lock, LogIn, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/AuthProvider";
 
 const navItems = [
   { to: "/feed", label: "Feed", icon: Home },
@@ -24,6 +26,13 @@ const comingSoon = [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -64,6 +73,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <TooltipContent>Coming soon</TooltipContent>
               </Tooltip>
             ))}
+
+            {/* Auth button */}
+            {user ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="gap-1.5 text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/auth")}
+                className="gap-1.5 text-muted-foreground hover:text-foreground"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </Button>
+            )}
           </div>
         </div>
 
@@ -84,6 +116,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {item.label}
             </Link>
           ))}
+          {/* Mobile auth icon */}
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              className="flex flex-col items-center gap-0.5 px-3 py-1 text-xs text-muted-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              className="flex flex-col items-center gap-0.5 px-3 py-1 text-xs text-muted-foreground"
+            >
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Link>
+          )}
         </nav>
       </header>
 
