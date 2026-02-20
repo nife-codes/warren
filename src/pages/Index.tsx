@@ -25,10 +25,10 @@ const Landing = () => {
 
         <div className="flex items-center gap-3">
           <Button variant="hero" size="lg" asChild>
-            <Link to="/feed">Sign Up</Link>
+            <Link to="/auth">Sign Up</Link>
           </Button>
           <Button variant="hero-outline" size="lg" asChild>
-            <Link to="/feed">Log In</Link>
+            <Link to="/auth">Log In</Link>
           </Button>
         </div>
 
