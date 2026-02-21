@@ -1,8 +1,16 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Rabbit } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 
 const Landing = () => {
+  const { user, loading } = useAuth();
+
+  // Already logged in — skip the landing page
+  if (!loading && user) {
+    return <Navigate to="/feed" replace />;
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="animate-fade-in flex flex-col items-center text-center" style={{ animationDelay: "0ms" }}>
