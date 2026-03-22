@@ -1,13 +1,48 @@
-import { Heart, Bookmark } from "lucide-react";
-import { type CaseItem } from "@/data/mockData";
+import { Heart, Bookmark, MessageCircle } from "lucide-react";
+import { type CaseItem } from "@/types/case";
 import { CaseTypeBadge } from "./CaseTypeBadge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "./AuthProvider";
+import { supabase } from "@/lib/supabase";
+import { FounderBadge } from "./FounderBadge";
 
 export function CaseCard({ caseItem }: { caseItem: CaseItem }) {
+  const { user, isDemo } = useAuth();
+  const navigate = useNavigate();
   const [liked, setLiked] = useState(caseItem.liked);
   const [saved, setSaved] = useState(caseItem.saved);
   const [likeCount, setLikeCount] = useState(caseItem.likes);
+
+  const requireAuth = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate("/auth");
+  };
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user || isDemo) { requireAuth(e); return; }
+    const next = !saved;
+    setSaved(next);
+    if (next) {
+      await supabase.from("case_saves").insert({ user_id: user.id, case_id: caseItem.id });
+    } else {
+      await supabase.from("case_saves").delete().eq("user_id", user.id).eq("case_id", caseItem.id);
+    }
+  };
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user || isDemo) { requireAuth(e); return; }
+    const next = !liked;
+    setLiked(next);
+    setLikeCount(c => next ? c + 1 : c - 1);
+    if (next) {
+      await supabase.from("case_likes").insert({ user_id: user.id, case_id: caseItem.id });
+    } else {
+      await supabase.from("case_likes").delete().eq("user_id", user.id).eq("case_id", caseItem.id);
+    }
+  };
 
   return (
     <Link
@@ -48,29 +83,27 @@ export function CaseCard({ caseItem }: { caseItem: CaseItem }) {
           <span className="text-xs font-medium text-muted-foreground">
             {caseItem.author.username}
           </span>
+          {caseItem.author.is_founder && <FounderBadge />}
         </div>
 
         <div className="flex items-center gap-3">
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              setLiked(!liked);
-              setLikeCount((c) => (liked ? c - 1 : c + 1));
-            }}
+            onClick={handleLike}
             className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
           >
             <Heart className={`h-3.5 w-3.5 ${liked ? "fill-primary text-primary" : ""}`} />
             {likeCount}
           </button>
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              setSaved(!saved);
-            }}
+            onClick={handleSave}
             className="text-muted-foreground transition-colors hover:text-primary"
           >
             <Bookmark className={`h-3.5 w-3.5 ${saved ? "fill-primary text-primary" : ""}`} />
           </button>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MessageCircle className="h-3.5 w-3.5" />
+            {caseItem.comment_count ?? 0}
+          </span>
         </div>
       </div>
     </Link>

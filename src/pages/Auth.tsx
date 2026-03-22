@@ -1,11 +1,18 @@
-import { useState, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useMemo, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Rabbit, Mail, Eye, EyeOff, Check, X } from "lucide-react";
+import { Loader2, Mail, Eye, EyeOff, Check, X, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
 
 // Google G icon SVG
 const GoogleIcon = () => (
@@ -47,6 +54,7 @@ export default function Auth() {
     const [googleLoading, setGoogleLoading] = useState(false);
 
     const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -54,6 +62,26 @@ export default function Auth() {
     const [showConfirm, setShowConfirm] = useState(false);
 
     const [isSignUp, setIsSignUp] = useState(false);
+    const [noAccountDialog, setNoAccountDialog] = useState(false);
+
+    const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "taken" | "available">("idle");
+
+    useEffect(() => {
+        if (!isSignUp || username.trim().length < 2) {
+            setUsernameStatus("idle");
+            return;
+        }
+        setUsernameStatus("checking");
+        const timeout = setTimeout(async () => {
+            const { data } = await supabase
+                .from("profiles")
+                .select("id")
+                .eq("username", username.trim())
+                .maybeSingle();
+            setUsernameStatus(data ? "taken" : "available");
+        }, 500);
+        return () => clearTimeout(timeout);
+    }, [username, isSignUp]);
 
     const navigate = useNavigate();
     const { toast } = useToast();
@@ -71,7 +99,7 @@ export default function Auth() {
 
     const isSubmitDisabled =
         loading || demoLoading || googleLoading ||
-        (isSignUp && (!allReqsMet || !passwordsMatch));
+        (isSignUp && (!allReqsMet || !passwordsMatch || username.trim().length < 2 || usernameStatus !== "available"));
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -82,16 +110,29 @@ export default function Auth() {
         setLoading(true);
         try {
             if (isSignUp) {
-                const { error } = await supabase.auth.signUp({ email, password });
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: { data: { username: username.trim().toLowerCase() } },
+                });
                 if (error) throw error;
-                toast({ title: "Check your email", description: "We sent you a confirmation link to complete your signup." });
+                if (data.session && data.user) {
+                    await supabase
+                        .from("profiles")
+                        .upsert({ id: data.user.id, username: username.trim().toLowerCase() }, { onConflict: "id" });
+                }
+                navigate("/feed");
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
                 navigate("/feed");
             }
         } catch (error: any) {
-            toast({ variant: "destructive", title: "Error", description: error.message });
+            if (!isSignUp && error.message?.toLowerCase().includes("invalid login credentials")) {
+                setNoAccountDialog(true);
+            } else {
+                toast({ variant: "destructive", title: "Error", description: error.message });
+            }
         } finally {
             setLoading(false);
         }
@@ -127,6 +168,7 @@ export default function Auth() {
 
     const switchMode = () => {
         setIsSignUp(!isSignUp);
+        setUsername("");
         setPassword("");
         setConfirmPassword("");
         setShowPassword(false);
@@ -140,7 +182,7 @@ export default function Auth() {
                 {/* Logo */}
                 <div className="flex flex-col items-center mb-8">
                     <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-4">
-                        <Rabbit className="h-6 w-6 text-primary" />
+                        <img src="/logo.png" alt="Warren" className="h-7 w-7" />
                     </div>
                     <h1 className="text-2xl font-bold tracking-tight">
                         {isSignUp ? "Create your account" : "Welcome back"}
@@ -184,6 +226,45 @@ export default function Auth() {
                             autoComplete="email"
                             disabled={loading || demoLoading || googleLoading}
                         />
+
+                        {/* Username — sign up only */}
+                        {isSignUp && (
+                            <div className="space-y-1">
+                                <div className="relative">
+                                    <Input
+                                        type="text"
+                                        placeholder="Username"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                                        required
+                                        autoComplete="username"
+                                        disabled={loading || demoLoading || googleLoading}
+                                        className={cn(
+                                            "pr-10",
+                                            usernameStatus === "taken" && "border-red-500 focus-visible:ring-red-500",
+                                            usernameStatus === "available" && "border-green-500 focus-visible:ring-green-500",
+                                        )}
+                                    />
+                                    {usernameStatus === "checking" && (
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                            <div className="h-4 w-4 rounded-full border-2 border-muted border-t-primary animate-spin" />
+                                        </div>
+                                    )}
+                                    {usernameStatus === "available" && (
+                                        <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                                    )}
+                                    {usernameStatus === "taken" && (
+                                        <X className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
+                                    )}
+                                </div>
+                                {usernameStatus === "taken" && (
+                                    <p className="text-xs text-red-500">Username is already taken</p>
+                                )}
+                                {usernameStatus === "available" && (
+                                    <p className="text-xs text-green-500">Username is available</p>
+                                )}
+                            </div>
+                        )}
 
                         {/* Password */}
                         <div className="space-y-1.5">
@@ -314,7 +395,7 @@ export default function Auth() {
                         disabled={demoLoading || loading || googleLoading}
                         type="button"
                     >
-                        {demoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <span className="text-base">🐇</span>}
+                        {demoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                         Try Demo Account
                     </Button>
                 </div>
@@ -331,6 +412,36 @@ export default function Auth() {
                     </button>
                 </p>
             </div>
+
+            {/* No account dialog */}
+            <Dialog open={noAccountDialog} onOpenChange={setNoAccountDialog}>
+                <DialogContent className="max-w-xs text-center">
+                    <DialogHeader className="items-center">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-2">
+                            <img src="/logo.png" alt="Warren" className="h-7 w-7" />
+                        </div>
+                        <DialogTitle>No account found</DialogTitle>
+                        <DialogDescription>
+                            We couldn't find an account with that email. Want to create one?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-2 mt-2">
+                        <Button
+                            onClick={() => { setNoAccountDialog(false); switchMode(); }}
+                            className="w-full"
+                        >
+                            Sign Up
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setNoAccountDialog(false)}
+                            className="w-full"
+                        >
+                            Try Again
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
