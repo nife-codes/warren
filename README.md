@@ -1,103 +1,69 @@
-# Warren 🐇
+# Warren
 
-**Warren** is a dark-cute case documentation social app for tracking "rabbit holes" — true crime, lore, conspiracies, and high-strangeness.
+A dark-themed platform for documenting mysteries, true crime, lore, conspiracies, paranormal events, historical secrets, research, and world building. Think of it as a case-filing system for the unexplained.
 
-![Warren Hero](/hero-rabbit.png)
+---
+
+## What it is
+
+Warren lets you open case files on anything worth investigating. Each case type has its own structured format — victims, suspects, evidence, timelines, creep ratings, source links — so nothing gets lost in a wall of text. Cases can be public or kept private. The community can read, react, annotate, and comment on anything you share.
+
+---
 
 ## Features
 
-- **Document Cases**: Create detailed files on true crime, lore, or conspiracies.
-- **Social Investigation**: Share cases, like, and save findings from others.
-- **Rabbit Hole Styling**: A unique "dark-cute" aesthetic.
-- **Supabase Backend**: Real-time data persistence and authentication.
+- **8 case types** — True Crime, Lore/Urban Legend, Conspiracy, Missing Persons, Paranormal, Historical, Research, World Building
+- **Structured case files** — each type has purpose-built fields: people entries, evidence lists, chip selectors, image uploads, ratings, and more
+- **Highlight & react** — select any text on a case to react with an emoji or leave an annotated comment anchored to that passage
+- **Comments & replies** — threaded comments with likes, author tags, and delete
+- **Like & save** — like cases and bookmark them to your Saved tab in My Warren
+- **My Warren** — your personal library with tabs for your own cases and saved cases
+- **Feed** — browse all public cases, filter by type, search by title or tag
+- **People search** — find and visit other users' profiles
+- **User profiles** — avatar, display name, pronouns, bio, case count, follower count, follow button
+- **Draft auto-save** — new cases save to local storage as you type and reload if you leave mid-way
+- **Founder badge** — a unique Warren logo badge on the founder's profile with a hover/tap tooltip
+- **Bug reporting** — in-app form that submits directly to the database, no email client needed
+- **Demo account support** — accounts flagged as demo are read-only; interactions redirect to sign in
+- **Docs** — full in-app documentation with sidebar navigation and section tracking
 
-## Tech Stack
+---
 
-- **Frontend**: React, Vite, Tailwind CSS, shadcn/ui
-- **Backend**: Supabase (PostgreSQL, Auth)
-- **State Management**: React Query
+## Tech
 
-## Getting Started
+- **React + TypeScript + Vite**
+- **Tailwind CSS** with custom dark theme
+- **Supabase** — auth, database, storage, RLS
+- **React Router v6**
+- **shadcn/ui** component library
+- **Lucide** icons
 
-### Prerequisites
+---
 
-- Node.js & npm
-- A Supabase project
+## Database tables
 
-### Installation
+| Table | Purpose |
+|---|---|
+| `profiles` | User profiles — username, avatar, bio, pronouns, is_founder, is_demo |
+| `cases` | Case files — title, summary, type, fields (JSONB), tags, is_public |
+| `comments` | Comments and reactions on cases |
+| `comment_likes` | Likes on individual comments |
+| `case_likes` | Likes on cases |
+| `case_saves` | Saved/bookmarked cases |
+| `follows` | Follow relationships between users |
+| `bug_reports` | In-app bug reports |
 
-1.  Clone the repo:
-    ```bash
-    git clone https://github.com/your-username/warren.git
-    cd warren
-    ```
+---
 
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
+## Running locally
 
-3.  Set up Environment Variables:
-    Create a `.env` file in the root directory:
-    ```env
-    VITE_SUPABASE_URL=your_supabase_url
-    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-    ```
-
-4.  Run the development server:
-    ```bash
-    npm run dev
-    ```
-
-## Database Schema
-
-Run the following SQL in your Supabase SQL Editor to set up the tables:
-
-```sql
--- Profiles
-create table public.profiles (
-  id uuid references auth.users not null primary key,
-  username text unique,
-  avatar_url text,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- Cases
-create table public.cases (
-  id uuid default gen_random_uuid() primary key,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  title text not null,
-  summary text,
-  type text not null,
-  tags text[] default array[]::text[],
-  content jsonb default '{}'::jsonb,
-  author_id uuid references public.profiles(id) not null
-);
-
--- Likes & Saves
-create table public.likes (
-  user_id uuid references public.profiles(id) not null,
-  case_id uuid references public.cases(id) not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  primary key (user_id, case_id)
-);
-
-create table public.saves (
-  user_id uuid references public.profiles(id) not null,
-  case_id uuid references public.cases(id) not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  primary key (user_id, case_id)
-);
-
--- Enable RLS
-alter table public.profiles enable row level security;
-alter table public.cases enable row level security;
-alter table public.likes enable row level security;
-alter table public.saves enable row level security;
-
--- (Add policies as needed for public access and user-specific writes)
+```bash
+npm install
+npm run dev
 ```
 
-## License
+Requires a Supabase project. Add your credentials to the environment.
 
-MIT
+---
+
+Built by [@nife-codes](https://github.com/nife-codes)
