@@ -12,6 +12,7 @@ import { cn, timeAgo, fetchCommentCounts } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { FounderBadge } from "@/components/FounderBadge";
+import { FollowListModal } from "@/components/FollowListModal";
 
 const Profile = () => {
   const { user, loading: authLoading, isFounder, isDemo } = useAuth();
@@ -21,6 +22,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [followModal, setFollowModal] = useState<"followers" | "following" | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
   // Edit form state
@@ -236,8 +238,8 @@ const Profile = () => {
             )}
             <div className="mt-2 flex items-center justify-center sm:justify-start gap-4 text-sm text-muted-foreground">
               <span><strong className="text-foreground">{cases.length}</strong> cases</span>
-              <span><strong className="text-foreground">{followerCount}</strong> followers</span>
-              <span><strong className="text-foreground">{followingCount}</strong> following</span>
+              <button onClick={() => setFollowModal("followers")} className="hover:text-foreground transition-colors"><strong className="text-foreground">{followerCount}</strong> followers</button>
+              <button onClick={() => setFollowModal("following")} className="hover:text-foreground transition-colors"><strong className="text-foreground">{followingCount}</strong> following</button>
             </div>
           </div>
           {!isDemo && (
@@ -411,6 +413,9 @@ const Profile = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {followModal && user && (
+        <FollowListModal userId={user.id} type={followModal} onClose={() => setFollowModal(null)} />
+      )}
     </Layout>
   );
 };

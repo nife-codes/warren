@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, UserPlus, UserCheck } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { FounderBadge } from "@/components/FounderBadge";
+import { FollowListModal } from "@/components/FollowListModal";
 
 const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
@@ -20,6 +21,7 @@ const UserProfile = () => {
   const [following, setFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [followModal, setFollowModal] = useState<"followers" | "following" | null>(null);
 
   useEffect(() => {
     if (username) fetchUser();
@@ -148,8 +150,8 @@ const UserProfile = () => {
             )}
             <div className="mt-2 flex items-center justify-center sm:justify-start gap-4 text-sm text-muted-foreground">
               <span><strong className="text-foreground">{cases.length}</strong> cases</span>
-              <span><strong className="text-foreground">{followerCount}</strong> followers</span>
-              <span><strong className="text-foreground">{followingCount}</strong> following</span>
+              <button onClick={() => setFollowModal("followers")} className="hover:text-foreground transition-colors"><strong className="text-foreground">{followerCount}</strong> followers</button>
+              <button onClick={() => setFollowModal("following")} className="hover:text-foreground transition-colors"><strong className="text-foreground">{followingCount}</strong> following</button>
             </div>
           </div>
           {user && user.id !== profile.id && (
@@ -186,6 +188,9 @@ const UserProfile = () => {
           </div>
         )}
       </div>
+      {followModal && profile && (
+        <FollowListModal userId={profile.id} type={followModal} onClose={() => setFollowModal(null)} />
+      )}
     </Layout>
   );
 };

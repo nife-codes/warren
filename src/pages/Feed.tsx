@@ -40,6 +40,17 @@ const Feed = () => {
   const [people, setPeople] = useState<UserResult[]>([]);
   const [peopleLoading, setPeopleLoading] = useState(false);
   const [peopleSearched, setPeopleSearched] = useState(false);
+  const [recentPeople, setRecentPeople] = useState<UserResult[]>(() => {
+    try { return JSON.parse(localStorage.getItem("warren_recent_people") || "[]"); } catch { return []; }
+  });
+
+  const saveRecent = (u: UserResult) => {
+    setRecentPeople(prev => {
+      const next = [u, ...prev.filter(p => p.id !== u.id)].slice(0, 5);
+      localStorage.setItem("warren_recent_people", JSON.stringify(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     fetchCases();
@@ -209,6 +220,7 @@ const Feed = () => {
               <Link
                 key={u.id}
                 to={`/user/${u.username}`}
+                onClick={() => saveRecent(u)}
                 className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30 hover:bg-accent"
               >
                 <img
@@ -229,7 +241,30 @@ const Feed = () => {
                 <p className="text-sm">Try a different name or username</p>
               </div>
             )}
-            {!peopleSearched && (
+            {!peopleSearched && recentPeople.length > 0 && (
+              <div>
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/50">Recent</p>
+                {recentPeople.map((u) => (
+                  <Link
+                    key={u.id}
+                    to={`/user/${u.username}`}
+                    onClick={() => saveRecent(u)}
+                    className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 mb-2 transition-colors hover:border-primary/30 hover:bg-accent"
+                  >
+                    <img
+                      src={u.avatar_url || `https://api.dicebear.com/9.x/thumbs/svg?seed=${u.id}`}
+                      alt={u.username}
+                      className="h-11 w-11 rounded-full bg-muted object-cover ring-1 ring-border"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{u.display_name || u.username}</p>
+                      {u.display_name && <p className="text-xs text-muted-foreground">@{u.username}</p>}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+            {!peopleSearched && recentPeople.length === 0 && (
               <div className="py-16 text-center text-muted-foreground">
                 <p className="text-sm">Type a name or username to search</p>
               </div>

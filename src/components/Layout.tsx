@@ -83,7 +83,7 @@ const navItems = [
 
 const comingSoon = ["Graph View", "Forking", "Collab", "Version Control", "Timeline"];
 
-function MoreMenu({ user, onSignOut }: { user: any; onSignOut: () => void }) {
+function MoreMenu({ user, onSignOut, unreadCount = 0 }: { user: any; onSignOut: () => void; unreadCount?: number }) {
   const [open, setOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [bugOpen, setBugOpen] = useState(false);
@@ -95,16 +95,36 @@ function MoreMenu({ user, onSignOut }: { user: any; onSignOut: () => void }) {
     <div className="relative">
       <button
         onClick={() => { setOpen(v => !v); setConfirmSignOut(false); }}
-        className="flex flex-col items-center gap-0.5 px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors md:flex-row md:gap-1 md:rounded-md md:px-2 md:py-1.5"
+        className="relative flex flex-col items-center gap-0.5 px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors md:flex-row md:gap-1 md:rounded-md md:px-2 md:py-1.5"
       >
         <MoreHorizontal className="h-4 w-4" />
         <span className="md:hidden">More</span>
+        {unreadCount > 0 && (
+          <span className="absolute -top-0.5 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+            {unreadCount}
+          </span>
+        )}
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={close} />
           <div className="absolute right-0 top-full mt-1.5 z-50 w-48 rounded-xl border border-border bg-card shadow-xl overflow-hidden">
+            {user && (
+              <Link
+                to="/notifications"
+                onClick={close}
+                className="flex items-center justify-between px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <span className="flex items-center gap-2.5">
+                  <Bell className="h-4 w-4" />
+                  Notifications
+                </span>
+                {unreadCount > 0 && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{unreadCount}</span>
+                )}
+              </Link>
+            )}
             <Link
               to="/docs"
               onClick={close}
@@ -250,13 +270,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {item.label}
             </Link>
           ))}
-          {user && (
-            <Link to="/notifications" className="relative flex flex-col items-center gap-0.5 px-3 py-1 text-xs text-muted-foreground">
-              <Bell className="h-4 w-4" />
-              {unreadCount > 0 && <span className="absolute top-0 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{unreadCount}</span>}
-            </Link>
-          )}
-          <MoreMenu user={user} onSignOut={handleSignOut} />
+          <MoreMenu user={user} onSignOut={handleSignOut} unreadCount={unreadCount} />
         </nav>
       </header>
 

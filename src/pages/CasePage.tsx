@@ -498,15 +498,7 @@ const CasePage = () => {
         </Link>
 
         <article className="animate-fade-in">
-          <div className="mb-4 flex items-center gap-3">
-            <CaseTypeBadge type={caseItem.type} />
-            <span className="text-xs text-muted-foreground">{caseItem.createdAt}</span>
-          </div>
-
-          <h1 className="mb-4 text-3xl font-extrabold leading-tight">{caseItem.title}</h1>
-          <p className="mb-6 text-base leading-relaxed text-muted-foreground">{caseItem.summary}</p>
-
-          <div className="mb-6 flex flex-wrap items-center gap-4">
+          <div className="mb-4 flex flex-wrap items-center gap-4">
             <Link to={`/user/${caseItem.author.username}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <img src={caseItem.author.avatar} alt={caseItem.author.username} className="h-8 w-8 rounded-full bg-muted" />
               <span className="flex items-center gap-1 text-sm font-semibold">
@@ -561,6 +553,14 @@ const CasePage = () => {
               )}
             </div>
           </div>
+
+          <div className="mb-4 flex items-center gap-3 mt-2">
+            <CaseTypeBadge type={caseItem.type} />
+            <span className="text-xs text-muted-foreground">{caseItem.createdAt}</span>
+          </div>
+
+          <h1 className="mb-4 text-3xl font-extrabold leading-tight">{caseItem.title}</h1>
+          <p className="mb-6 text-base leading-relaxed text-muted-foreground">{caseItem.summary}</p>
 
           {caseItem.tags?.length > 0 && (
             <div className="mb-6 flex flex-wrap gap-1.5">
