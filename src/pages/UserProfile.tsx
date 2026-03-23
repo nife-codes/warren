@@ -19,6 +19,7 @@ const UserProfile = () => {
   const [notFound, setNotFound] = useState(false);
   const [following, setFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
     if (username) fetchUser();
@@ -34,11 +35,13 @@ const UserProfile = () => {
     if (!profileData) { setNotFound(true); setLoading(false); return; }
     setProfile(profileData);
 
-    const [followCountRes, followStatusRes] = await Promise.all([
+    const [followCountRes, followingCountRes, followStatusRes] = await Promise.all([
       supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", profileData.id),
+      supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", profileData.id),
       user ? supabase.from("follows").select("follower_id").eq("follower_id", user.id).eq("following_id", profileData.id).maybeSingle() : Promise.resolve({ data: null }),
     ]);
     setFollowerCount(followCountRes.count || 0);
+    setFollowingCount(followingCountRes.count || 0);
     setFollowing(!!followStatusRes.data);
 
     const { data: casesData } = await supabase
@@ -75,6 +78,9 @@ const UserProfile = () => {
     setFollowerCount(c => next ? c + 1 : c - 1);
     if (next) {
       await supabase.from("follows").insert({ follower_id: user.id, following_id: profile.id });
+      if (user.id !== profile.id) {
+        await supabase.from("notifications").insert({ user_id: profile.id, actor_id: user.id, type: "follow" });
+      }
     } else {
       await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", profile.id);
     }
@@ -143,6 +149,7 @@ const UserProfile = () => {
             <div className="mt-2 flex items-center justify-center sm:justify-start gap-4 text-sm text-muted-foreground">
               <span><strong className="text-foreground">{cases.length}</strong> cases</span>
               <span><strong className="text-foreground">{followerCount}</strong> followers</span>
+              <span><strong className="text-foreground">{followingCount}</strong> following</span>
             </div>
           </div>
           {user && user.id !== profile.id && (

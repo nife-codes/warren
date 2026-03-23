@@ -16,6 +16,7 @@ import CheckEmail from "./pages/CheckEmail";
 import SetupUsername from "./pages/SetupUsername";
 import UserProfile from "./pages/UserProfile";
 import Docs from "./pages/Docs";
+import Notifications from "./pages/Notifications";
 import { AuthProvider } from "./components/AuthProvider";
 import { PrivateRoute } from "./components/PrivateRoute";
 
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/case/:id" element={<PrivateRoute><CasePage /></PrivateRoute>} />
             <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
             <Route path="/user/:username" element={<PrivateRoute><UserProfile /></PrivateRoute>} />
+            <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
 
             <Route path="/docs" element={<Docs />} />
             <Route path="*" element={<NotFound />} />

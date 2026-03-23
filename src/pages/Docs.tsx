@@ -77,8 +77,8 @@ const CASE_TYPES = [
   { label: "Missing Persons",   color: "bg-sky-500/15 text-sky-400 border-sky-500/20",       desc: "Disappearances, cold cases, and unidentified remains." },
   { label: "Paranormal",        color: "bg-indigo-500/15 text-indigo-400 border-indigo-500/20", desc: "Ghosts, cryptids, unexplained phenomena." },
   { label: "Historical Mystery", color: "bg-orange-500/15 text-orange-400 border-orange-500/20", desc: "Unsolved events from history." },
-  { label: "Research",          color: "bg-teal-500/15 text-teal-400 border-teal-500/20",    desc: "Deep dives, study notes, topic breakdowns — forex, science, space, anything." },
-  { label: "World Building",    color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20", desc: "Characters, locations, factions, lore, magic systems — your world, documented." },
+  { label: "Research",          color: "bg-teal-500/15 text-teal-400 border-teal-500/20",    desc: "Deep dives, study notes, topic breakdowns: forex, science, space, anything." },
+  { label: "World Building",    color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20", desc: "Characters, locations, factions, lore, magic systems. Your world, documented." },
 ];
 
 const FIELD_TYPES = [

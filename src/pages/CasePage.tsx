@@ -385,6 +385,10 @@ const CasePage = () => {
     if (!error && data) {
       setComments(prev => [...prev, { ...data, like_count: 0, liked: false }]);
       setCommentText(""); setQuotedText(""); setReplyTo(null);
+      const ownerId = caseItem?.author.id;
+      if (ownerId && ownerId !== user.id) {
+        await supabase.from("notifications").insert({ user_id: ownerId, actor_id: user.id, type: "comment", case_id: id });
+      }
     }
     setSubmitting(false);
   };
@@ -518,6 +522,10 @@ const CasePage = () => {
                 setLikeCount(c => next ? c + 1 : c - 1);
                 if (next) {
                   await supabase.from("case_likes").insert({ user_id: user.id, case_id: id });
+                  const ownerId = caseItem?.author.id;
+                  if (ownerId && ownerId !== user.id) {
+                    await supabase.from("notifications").insert({ user_id: ownerId, actor_id: user.id, type: "like", case_id: id });
+                  }
                 } else {
                   await supabase.from("case_likes").delete().eq("user_id", user.id).eq("case_id", id);
                 }

@@ -1,10 +1,10 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Plus, Home, User, Lock, LogIn, LogOut, Rabbit, BookOpen, MoreHorizontal, Bug, X, Send } from "lucide-react";
+import { Plus, Home, User, Lock, LogIn, LogOut, Rabbit, BookOpen, MoreHorizontal, Bug, X, Send, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/components/AuthProvider";
 import { FounderBadge } from "@/components/FounderBadge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
 
@@ -173,6 +173,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate  = useNavigate();
   const { user, signOut, isDemo } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("notifications").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("read", false)
+      .then(({ count }) => setUnreadCount(count || 0));
+  }, [user, location.pathname]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -207,6 +214,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
+            {user && (
+              <Link to="/notifications" className="relative flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{unreadCount}</span>}
+              </Link>
+            )}
             {comingSoon.slice(0, 2).map((feat) => (
               <Tooltip key={feat}>
                 <TooltipTrigger asChild>
@@ -237,6 +250,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {item.label}
             </Link>
           ))}
+          {user && (
+            <Link to="/notifications" className="relative flex flex-col items-center gap-0.5 px-3 py-1 text-xs text-muted-foreground">
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && <span className="absolute top-0 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{unreadCount}</span>}
+            </Link>
+          )}
           <MoreMenu user={user} onSignOut={handleSignOut} />
         </nav>
       </header>
