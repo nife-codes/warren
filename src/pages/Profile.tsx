@@ -19,6 +19,8 @@ const Profile = () => {
   const [cases, setCases] = useState<CaseItem[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
 
   // Edit form state
@@ -69,6 +71,12 @@ const Profile = () => {
     if (!user) return;
     const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
     setProfile(data);
+    const [{ count: followers }, { count: following }] = await Promise.all([
+      supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", user.id),
+      supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", user.id),
+    ]);
+    setFollowerCount(followers || 0);
+    setFollowingCount(following || 0);
   };
 
   const fetchMyCases = async () => {
@@ -228,8 +236,8 @@ const Profile = () => {
             )}
             <div className="mt-2 flex items-center justify-center sm:justify-start gap-4 text-sm text-muted-foreground">
               <span><strong className="text-foreground">{cases.length}</strong> cases</span>
-              <span><strong className="text-foreground">0</strong> followers</span>
-              <span><strong className="text-foreground">0</strong> following</span>
+              <span><strong className="text-foreground">{followerCount}</strong> followers</span>
+              <span><strong className="text-foreground">{followingCount}</strong> following</span>
             </div>
           </div>
           {!isDemo && (
