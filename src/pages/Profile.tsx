@@ -210,12 +210,12 @@ const Profile = () => {
             alt={profile?.username}
             className="h-20 w-20 rounded-full bg-muted ring-2 ring-primary/30 object-cover"
           />
-          <div className="flex-1 text-center sm:text-left">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <h1 className="text-2xl font-bold">
+          <div className="flex-1 flex flex-col items-center sm:items-start text-center sm:text-left">
+            <div className="flex flex-col gap-0.5 items-center sm:items-start">
+              <h1 className="text-2xl font-bold text-center sm:text-left">
                 {profile?.display_name || profile?.username || user.email?.split("@")[0]}
+                {isFounder && <span className="inline-flex items-center align-middle ml-1.5"><FounderBadge /></span>}
               </h1>
-              {isFounder && <FounderBadge />}
               {profile?.display_name && (
                 <span className="text-sm text-muted-foreground">@{profile?.username}</span>
               )}

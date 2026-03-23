@@ -74,17 +74,21 @@ export function CaseCard({ caseItem }: { caseItem: CaseItem }) {
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <Link
+          to={`/user/${caseItem.author.username}`}
+          onClick={e => e.stopPropagation()}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
           <img
             src={caseItem.author.avatar}
             alt={caseItem.author.username}
             className="h-6 w-6 rounded-full bg-muted"
           />
-          <span className="text-xs font-medium text-muted-foreground">
+          <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
             {caseItem.author.username}
+            {caseItem.author.is_founder && <FounderBadge size="sm" />}
           </span>
-          {caseItem.author.is_founder && <FounderBadge />}
-        </div>
+        </Link>
 
         <div className="flex items-center gap-3">
           <button

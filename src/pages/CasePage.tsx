@@ -503,11 +503,13 @@ const CasePage = () => {
           <p className="mb-6 text-base leading-relaxed text-muted-foreground">{caseItem.summary}</p>
 
           <div className="mb-6 flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
+            <Link to={`/user/${caseItem.author.username}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <img src={caseItem.author.avatar} alt={caseItem.author.username} className="h-8 w-8 rounded-full bg-muted" />
-              <span className="text-sm font-semibold">{caseItem.author.username}</span>
-              {caseItem.author.is_founder && <FounderBadge />}
-            </div>
+              <span className="flex items-center gap-1 text-sm font-semibold">
+                {caseItem.author.username}
+                {caseItem.author.is_founder && <FounderBadge size="sm" />}
+              </span>
+            </Link>
             <div className="ml-auto flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={async () => {
                 if (!user || isDemo) { navigate("/auth"); return; }

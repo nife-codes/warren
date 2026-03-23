@@ -123,11 +123,13 @@ const UserProfile = () => {
             className="h-20 w-20 rounded-full bg-muted ring-2 ring-primary/30 object-cover"
           />
           <div className="flex-1">
-            <div className="flex flex-wrap items-center gap-1.5 text-center sm:text-left justify-center sm:justify-start">
-              <h1 className="text-2xl font-bold">
-                {profile.display_name || profile.username}
-              </h1>
-              {profile.is_founder && <FounderBadge />}
+            <div className="flex flex-col gap-0.5 items-center sm:items-start">
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-2xl font-bold">
+                  {profile.display_name || profile.username}
+                </h1>
+                {profile.is_founder && <FounderBadge />}
+              </div>
               {profile.display_name && (
                 <span className="text-sm text-muted-foreground">@{profile.username}</span>
               )}
