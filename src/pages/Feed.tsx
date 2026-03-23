@@ -4,8 +4,9 @@ import { type CaseType, type CaseItem } from "@/types/case";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { cn, timeAgo, fetchCommentCounts } from "@/lib/utils";
-import { Search } from "lucide-react";
+import { Search, UserPlus, UserCheck, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/components/AuthProvider";
 
 const filters: { label: string; value: CaseType | "all" }[] = [
   { label: "All",               value: "all"             },
@@ -29,7 +30,58 @@ type UserResult = {
   avatar_url: string | null;
 };
 
+function PersonCard({ u, onFollow, following, currentUserId, onVisit, onRemove }: {
+  u: UserResult;
+  onFollow: (e: React.MouseEvent, id: string) => void;
+  following: boolean;
+  currentUserId?: string;
+  onVisit: () => void;
+  onRemove?: (e: React.MouseEvent, id: string) => void;
+}) {
+  return (
+    <Link
+      to={`/user/${u.username}`}
+      onClick={onVisit}
+      className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 mb-2 transition-colors hover:border-primary/30 hover:bg-accent"
+    >
+      <img
+        src={u.avatar_url || `https://api.dicebear.com/9.x/thumbs/svg?seed=${u.id}`}
+        alt={u.username}
+        className="h-10 w-10 rounded-full bg-muted object-cover ring-1 ring-border shrink-0"
+      />
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold truncate text-sm">{u.display_name || u.username}</p>
+        {u.display_name && <p className="text-xs text-muted-foreground">@{u.username}</p>}
+        {u.bio && <p className="mt-0.5 text-xs text-muted-foreground/70 truncate">{u.bio}</p>}
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        {currentUserId && currentUserId !== u.id && (
+          <button
+            onClick={(e) => onFollow(e, u.id)}
+            className={`flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+              following
+                ? "border-border text-muted-foreground hover:border-destructive/50 hover:text-destructive"
+                : "border-primary text-primary hover:bg-primary/10"
+            }`}
+          >
+            {following ? <><UserCheck className="h-3.5 w-3.5" /> Following</> : <><UserPlus className="h-3.5 w-3.5" /> Follow</>}
+          </button>
+        )}
+        {onRemove && (
+          <button
+            onClick={(e) => onRemove(e, u.id)}
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+    </Link>
+  );
+}
+
 const Feed = () => {
+  const { user } = useAuth();
   const [tab, setTab] = useState<Tab>("cases");
   const [activeFilter, setActiveFilter] = useState<CaseType | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,6 +95,9 @@ const Feed = () => {
   const [recentPeople, setRecentPeople] = useState<UserResult[]>(() => {
     try { return JSON.parse(localStorage.getItem("warren_recent_people") || "[]"); } catch { return []; }
   });
+  const [suggested, setSuggested] = useState<UserResult[]>([]);
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
 
   const saveRecent = (u: UserResult) => {
     setRecentPeople(prev => {
@@ -52,9 +107,63 @@ const Feed = () => {
     });
   };
 
+  const removeRecent = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setRecentPeople(prev => {
+      const next = prev.filter(p => p.id !== id);
+      localStorage.setItem("warren_recent_people", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const removeSuggested = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setHiddenIds(prev => new Set([...prev, id]));
+  };
+
+  const toggleFollow = async (e: React.MouseEvent, targetId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) return;
+    const isFollowing = followingIds.has(targetId);
+    setFollowingIds(prev => {
+      const next = new Set(prev);
+      isFollowing ? next.delete(targetId) : next.add(targetId);
+      return next;
+    });
+    if (isFollowing) {
+      await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", targetId);
+    } else {
+      await supabase.from("follows").insert({ follower_id: user.id, following_id: targetId });
+      await supabase.from("notifications").insert({ user_id: targetId, actor_id: user.id, type: "follow" });
+    }
+  };
+
   useEffect(() => {
     fetchCases();
+    fetchSuggested();
   }, []);
+
+  const fetchSuggested = async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, bio, avatar_url")
+      .not("username", "is", null)
+      .eq("is_demo", false)
+      .order("created_at", { ascending: true })
+      .limit(10);
+    setSuggested(data || []);
+    if (user && data?.length) {
+      const { data: follows } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", user.id)
+        .in("following_id", data.map(u => u.id));
+      setFollowingIds(new Set((follows || []).map((f: any) => f.following_id)));
+    }
+  };
 
   // People search — debounced
   useEffect(() => {
@@ -216,25 +325,7 @@ const Feed = () => {
         {/* People tab */}
         {tab === "people" && (
           <div className="space-y-2">
-            {people.map((u) => (
-              <Link
-                key={u.id}
-                to={`/user/${u.username}`}
-                onClick={() => saveRecent(u)}
-                className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30 hover:bg-accent"
-              >
-                <img
-                  src={u.avatar_url || `https://api.dicebear.com/9.x/thumbs/svg?seed=${u.id}`}
-                  alt={u.username}
-                  className="h-11 w-11 rounded-full bg-muted object-cover ring-1 ring-border"
-                />
-                <div className="min-w-0">
-                  <p className="font-semibold truncate">{u.display_name || u.username}</p>
-                  {u.display_name && <p className="text-xs text-muted-foreground">@{u.username}</p>}
-                  {u.bio && <p className="mt-0.5 text-xs text-muted-foreground/70 truncate">{u.bio}</p>}
-                </div>
-              </Link>
-            ))}
+            {peopleSearched && people.map((u) => <PersonCard key={u.id} u={u} onFollow={toggleFollow} following={followingIds.has(u.id)} currentUserId={user?.id} onVisit={() => saveRecent(u)} />)}
             {peopleSearched && people.length === 0 && (
               <div className="py-16 text-center text-muted-foreground">
                 <p className="text-base font-medium">No users found</p>
@@ -244,29 +335,13 @@ const Feed = () => {
             {!peopleSearched && recentPeople.length > 0 && (
               <div>
                 <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/50">Recent</p>
-                {recentPeople.map((u) => (
-                  <Link
-                    key={u.id}
-                    to={`/user/${u.username}`}
-                    onClick={() => saveRecent(u)}
-                    className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 mb-2 transition-colors hover:border-primary/30 hover:bg-accent"
-                  >
-                    <img
-                      src={u.avatar_url || `https://api.dicebear.com/9.x/thumbs/svg?seed=${u.id}`}
-                      alt={u.username}
-                      className="h-11 w-11 rounded-full bg-muted object-cover ring-1 ring-border"
-                    />
-                    <div className="min-w-0">
-                      <p className="font-semibold truncate">{u.display_name || u.username}</p>
-                      {u.display_name && <p className="text-xs text-muted-foreground">@{u.username}</p>}
-                    </div>
-                  </Link>
-                ))}
+                {recentPeople.map((u) => <PersonCard key={u.id} u={u} onFollow={toggleFollow} following={followingIds.has(u.id)} currentUserId={user?.id} onVisit={() => saveRecent(u)} onRemove={removeRecent} />)}
               </div>
             )}
-            {!peopleSearched && recentPeople.length === 0 && (
-              <div className="py-16 text-center text-muted-foreground">
-                <p className="text-sm">Type a name or username to search</p>
+            {!peopleSearched && suggested.filter(u => !recentPeople.find(r => r.id === u.id) && !hiddenIds.has(u.id)).length > 0 && (
+              <div className={recentPeople.length > 0 ? "mt-4" : ""}>
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/50">Suggested</p>
+                {suggested.filter(u => !recentPeople.find(r => r.id === u.id) && !hiddenIds.has(u.id)).map((u) => <PersonCard key={u.id} u={u} onFollow={toggleFollow} following={followingIds.has(u.id)} currentUserId={user?.id} onVisit={() => saveRecent(u)} onRemove={removeSuggested} />)}
               </div>
             )}
           </div>

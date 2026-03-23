@@ -152,7 +152,7 @@ const Landing = () => {
       <section className="border-t border-border px-6 py-20 sm:px-10">
         <div className="mx-auto max-w-5xl">
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">What you can document</p>
-          <h2 className="mb-12 text-3xl font-extrabold tracking-tight sm:text-4xl">Three templates.<br />Infinite rabbit holes.</h2>
+          <h2 className="mb-12 text-3xl font-extrabold tracking-tight sm:text-4xl">Eight case types.<br />Infinite rabbit holes.</h2>
 
           <div className="grid gap-4 sm:grid-cols-3">
             {[

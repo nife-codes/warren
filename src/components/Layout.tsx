@@ -1,9 +1,10 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Plus, Home, User, Lock, LogIn, LogOut, Rabbit, BookOpen, MoreHorizontal, Bug, X, Send, Bell } from "lucide-react";
+import { Plus, Home, User, Lock, LogIn, LogOut, Rabbit, BookOpen, MoreHorizontal, Bug, X, Send, Bell, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/components/AuthProvider";
 import { FounderBadge } from "@/components/FounderBadge";
+import { RatingModal } from "@/components/RatingModal";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
@@ -87,6 +88,7 @@ function MoreMenu({ user, onSignOut, unreadCount = 0 }: { user: any; onSignOut: 
   const [open, setOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [bugOpen, setBugOpen] = useState(false);
+  const [ratingOpen, setRatingOpen] = useState(false);
   const navigate = useNavigate();
 
   const close = () => { setOpen(false); setConfirmSignOut(false); };
@@ -140,6 +142,15 @@ function MoreMenu({ user, onSignOut, unreadCount = 0 }: { user: any; onSignOut: 
               <Bug className="h-4 w-4" />
               Report a bug
             </button>
+            {user && (
+              <button
+                onClick={() => { close(); setRatingOpen(true); }}
+                className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <Star className="h-4 w-4" />
+                Rate Warren
+              </button>
+            )}
 
             <div className="border-t border-border" />
 
@@ -185,6 +196,7 @@ function MoreMenu({ user, onSignOut, unreadCount = 0 }: { user: any; onSignOut: 
       )}
 
       {bugOpen && <BugReportModal onClose={() => setBugOpen(false)} />}
+      {ratingOpen && <RatingModal onClose={() => setRatingOpen(false)} />}
     </div>
   );
 }
