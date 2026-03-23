@@ -17,6 +17,7 @@ import SetupUsername from "./pages/SetupUsername";
 import UserProfile from "./pages/UserProfile";
 import Docs from "./pages/Docs";
 import Notifications from "./pages/Notifications";
+import Settings from "./pages/Settings";
 import { AuthProvider } from "./components/AuthProvider";
 import { PrivateRoute } from "./components/PrivateRoute";
 
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
             <Route path="/user/:username" element={<PrivateRoute><UserProfile /></PrivateRoute>} />
             <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
+            <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
 
             <Route path="/docs" element={<Docs />} />
             <Route path="*" element={<NotFound />} />

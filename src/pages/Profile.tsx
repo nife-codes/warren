@@ -1,6 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { CaseCard } from "@/components/CaseCard";
-import { Lock, Pencil, Camera, Check, X, Loader2 } from "lucide-react";
+import { Lock, Pencil, Camera, Check, X, Loader2, Settings } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState, useRef } from "react";
@@ -220,7 +220,7 @@ const Profile = () => {
             alt={profile?.username}
             className="h-20 w-20 rounded-full bg-muted ring-2 ring-primary/30 object-cover"
           />
-          <div className="flex-1 flex flex-col items-center sm:items-start text-center sm:text-left">
+          <div className="flex-1 flex flex-col items-center sm:items-start w-full">
             <div className="flex flex-col gap-0.5 items-center sm:items-start">
               <h1 className="text-2xl font-bold text-center sm:text-left">
                 {profile?.display_name || profile?.username || user.email?.split("@")[0]}
@@ -243,10 +243,17 @@ const Profile = () => {
             </div>
           </div>
           {!isDemo && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={openEdit}>
-              <Pencil className="h-3.5 w-3.5" />
-              Edit profile
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={openEdit}>
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </Button>
+              <Link to="/settings">
+                <Button variant="ghost" size="sm" className="px-2">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
 
