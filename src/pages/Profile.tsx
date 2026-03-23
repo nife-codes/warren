@@ -231,10 +231,10 @@ const Profile = () => {
               )}
             </div>
             {profile?.pronouns && (
-              <p className="text-xs text-muted-foreground/50 mt-0.5">{profile.pronouns}</p>
+              <p className="text-xs text-muted-foreground/50 mt-0.5 text-center sm:text-left">{profile.pronouns}</p>
             )}
             {profile?.bio && (
-              <p className="mt-1 text-sm text-muted-foreground max-w-md">{profile.bio}</p>
+              <p className="mt-1 text-sm text-muted-foreground max-w-md text-center sm:text-left">{profile.bio}</p>
             )}
             <div className="mt-2 flex items-center justify-center sm:justify-start gap-4 text-sm text-muted-foreground">
               <span><strong className="text-foreground">{cases.length}</strong> cases</span>
