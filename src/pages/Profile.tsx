@@ -231,10 +231,11 @@ const Profile = () => {
           />
           <div className="flex-1 flex flex-col items-center sm:items-start w-full">
             <div className="flex flex-col gap-0.5 items-center sm:items-start">
-              <h1 className="text-2xl font-bold text-center sm:text-left">
-                {profile?.display_name || profile?.username || user.email?.split("@")[0]}
-                {isFounder && <span className="inline-flex items-center align-middle ml-1.5"><FounderBadge /></span>}
-              </h1>
+              <div className="flex items-center justify-center sm:justify-start gap-1.5">
+                {isFounder && <span className="h-7 w-7 opacity-0 shrink-0" />}
+                <h1 className="text-2xl font-bold">{profile?.display_name || profile?.username || user.email?.split("@")[0]}</h1>
+                {isFounder && <FounderBadge />}
+              </div>
               {profile?.display_name && (
                 <span className="text-sm text-muted-foreground">@{profile?.username}</span>
               )}
