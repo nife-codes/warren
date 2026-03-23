@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import { FounderBadge } from "@/components/FounderBadge";
 import { FollowListModal } from "@/components/FollowListModal";
+import { AvatarCropModal } from "@/components/AvatarCropModal";
 
 const Profile = () => {
   const { user, loading: authLoading, isFounder, isDemo } = useAuth();
@@ -32,6 +33,7 @@ const Profile = () => {
   const [pronouns, setPronouns] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "taken" | "available">("idle");
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -123,8 +125,15 @@ const Profile = () => {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setCropSrc(URL.createObjectURL(file));
+    e.target.value = "";
+  };
+
+  const handleCropConfirm = (blob: Blob) => {
+    const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
     setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
+    setAvatarPreview(URL.createObjectURL(blob));
+    setCropSrc(null);
   };
 
   const handleSave = async () => {
@@ -422,6 +431,9 @@ const Profile = () => {
       </Dialog>
       {followModal && user && (
         <FollowListModal userId={user.id} type={followModal} onClose={() => setFollowModal(null)} />
+      )}
+      {cropSrc && (
+        <AvatarCropModal src={cropSrc} onConfirm={handleCropConfirm} onClose={() => setCropSrc(null)} />
       )}
     </Layout>
   );
